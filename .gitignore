@@ -15,8 +15,6 @@ build/
 *.env
 !*.env.example
 
-# ML models — large binary files
-backend/models/*.pkl
 
 # Node
 node_modules/
