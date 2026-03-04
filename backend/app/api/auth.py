@@ -12,8 +12,6 @@ from app.services.otp_service import send_otp, verify_otp
 router = APIRouter()
 
 
-# ── OTP ──────────────────────────────────────────────────────────────────────
-
 class OTPRequest(BaseModel):
     phone: str
 
@@ -23,6 +21,10 @@ class OTPVerify(BaseModel):
     full_name: str
     email: str
     password: str
+
+class OTPCheck(BaseModel):
+    phone: str
+    otp: str
 
 
 @router.post("/send-otp")
@@ -35,18 +37,20 @@ def request_otp(data: OTPRequest):
     return {"message": "OTP sent successfully to your mobile!"}
 
 
-@router.post("/verify-otp", response_model=Token, status_code=201)
-def verify_and_signup(data: OTPVerify, db: Session = Depends(get_db)):
-    # Verify OTP
+@router.post("/check-otp")
+def check_otp(data: OTPCheck):
     if not verify_otp(data.phone, data.otp):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+    return {"message": "OTP verified successfully"}
 
-    # Check email not already used
+
+@router.post("/verify-otp", response_model=Token, status_code=201)
+def verify_and_signup(data: OTPVerify, db: Session = Depends(get_db)):
+    if not verify_otp(data.phone, data.otp):
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-
-    # Create user
     user = User(
         email=data.email,
         full_name=data.full_name,
@@ -56,12 +60,9 @@ def verify_and_signup(data: OTPVerify, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-
     token = create_access_token({"sub": str(user.id), "role": user.role})
     return {"access_token": token, "token_type": "bearer", "user": user}
 
-
-# ── Normal login ──────────────────────────────────────────────────────────────
 
 @router.post("/login", response_model=Token)
 def login(data: UserLogin, db: Session = Depends(get_db)):
