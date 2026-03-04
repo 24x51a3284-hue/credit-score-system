@@ -12,11 +12,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite:///./creditdb.db"
 
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "https://your-frontend.vercel.app",
-    ]
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://credit-score-system.vercel.app"
 
     MODEL_PATH: str = "models/credit_model.pkl"
     SCALER_PATH: str = "models/scaler.pkl"
